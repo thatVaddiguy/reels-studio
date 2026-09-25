@@ -1,0 +1,8 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+yt-dlp
+faster-whisper>=1.1
+opencv-python-headless>=4.10,<5
+numpy
+anthropic

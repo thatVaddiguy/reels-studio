@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reels Studio</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='8' y='2' width='16' height='28' rx='4' fill='%23e8590c'/><path d='M14 12l6 4-6 4z' fill='white'/></svg>">
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --surface: #ffffff;
+    --surface-2: #f1efea;
+    --border: #e4e1da;
+    --text: #1d1b18;
+    --muted: #6f6a62;
+    --accent: #e8590c;
+    --accent-ink: #ffffff;
+    --accent-soft: #fdeee4;
+    --ok: #2f9e44;
+    --danger: #c92a2a;
+    --danger-soft: #fdecec;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141312;
+      --surface: #1d1c1a;
+      --surface-2: #262522;
+      --border: #34322e;
+      --text: #f1eee9;
+      --muted: #a39d94;
+      --accent: #ff7a33;
+      --accent-ink: #1a0d05;
+      --accent-soft: #3a2416;
+      --ok: #51cf66;
+      --danger: #ff6b6b;
+      --danger-soft: #3b1f1f;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 48px 16px 64px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .logo { width: 34px; height: 34px; border-radius: 9px; background: var(--accent);
+          display: grid; place-items: center; flex: none; }
+  .logo svg { width: 14px; height: 14px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+          box-shadow: var(--shadow); padding: 24px; }
+  .card + .card { margin-top: 16px; }
+  .hidden { display: none !important; }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  .label { font-size: 13px; font-weight: 600; margin: 22px 0 10px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0; }
+
+  .tabs { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 2px; }
+  .tabs button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px;
+                 font-weight: 500; padding: 7px 16px; border-radius: 8px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--surface); color: var(--text);
+                                      box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .panel { margin-top: 14px; }
+  input[type=url] { width: 100%; font: inherit; color: var(--text); background: var(--surface);
+                    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; outline: none; }
+  input[type=url]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  .drop { border: 1.5px dashed var(--border); border-radius: 12px; padding: 28px 16px; text-align: center;
+          cursor: pointer; transition: border-color .15s, background .15s; }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop strong { display: block; font-size: 14px; }
+  .drop span { color: var(--muted); font-size: 13px; }
+  .file-pill { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border);
+               border-radius: 10px; background: var(--surface-2); }
+  .file-pill .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+  .file-pill .size { color: var(--muted); font-size: 13px; }
+  .link-btn { border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px;
+              font-weight: 600; cursor: pointer; padding: 0; }
+
+  .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .opt { position: relative; display: block; border: 1px solid var(--border); border-radius: 12px;
+         padding: 14px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt .check { position: absolute; top: 12px; right: 12px; width: 18px; height: 18px; border-radius: 5px;
+                border: 1.5px solid var(--border); display: grid; place-items: center; transition: all .15s; }
+  .opt .check svg { width: 12px; height: 12px; opacity: 0; }
+  .opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .opt:has(input:checked) .check { background: var(--accent); border-color: var(--accent); }
+  .opt:has(input:checked) .check svg { opacity: 1; }
+  .opt:has(input:focus-visible) { box-shadow: 0 0 0 3px var(--accent-soft); }
+  .opt .t { font-weight: 600; font-size: 14px; display: block; padding-right: 22px; }
+  .opt .d { color: var(--muted); font-size: 12.5px; display: block; margin-top: 2px; }
+  .all { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; cursor: pointer; }
+  .all input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+  .ai { display: flex; gap: 12px; align-items: flex-start; margin-top: 20px; padding: 14px;
+        border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+  .ai:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .ai.off { cursor: not-allowed; opacity: .6; }
+  .ai input { width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+  .ai .t { font-weight: 600; font-size: 14px; display: block; }
+  .ai .d { color: var(--muted); font-size: 12.5px; display: block; margin-top: 2px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .dot.on { background: var(--ok); }
+  .hint { color: var(--danger); font-size: 13px; margin: 10px 0 0; min-height: 0; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit;
+         font-weight: 600; font-size: 14px; border-radius: 10px; padding: 11px 18px; cursor: pointer;
+         border: 1px solid transparent; text-decoration: none; transition: filter .15s, background .15s; }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { filter: brightness(1.05); }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+  .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover { background: var(--surface-2); }
+  .btn-danger { background: var(--danger-soft); color: var(--danger); }
+  .btn-danger:hover { filter: brightness(.97); }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+  .start { width: 100%; margin-top: 22px; padding: 13px; font-size: 15px; }
+
+  .steps { display: flex; gap: 6px; margin: 18px 0 16px; flex-wrap: wrap; }
+  .step { font-size: 12.5px; font-weight: 500; padding: 4px 10px; border-radius: 999px;
+          background: var(--surface-2); color: var(--muted); }
+  .step.active { background: var(--accent-soft); color: var(--accent); }
+  .step.done { color: var(--ok); }
+  .step.done::before { content: "✓ "; }
+  .bar-row { display: flex; align-items: center; gap: 12px; }
+  .bar { flex: 1; height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .4s ease; }
+  .pct { font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; min-width: 42px; text-align: right; }
+  .msg { margin: 12px 0 0; font-size: 14px; }
+  .log { list-style: none; margin: 10px 0 0; padding: 0; font-size: 12.5px; color: var(--muted); }
+  .log li { padding: 3px 0; display: flex; gap: 10px; }
+  .log time { font-variant-numeric: tabular-nums; opacity: .8; flex: none; }
+  .error-box { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--danger-soft);
+               color: var(--danger); font-size: 14px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .row.end { justify-content: flex-end; margin-top: 18px; }
+
+  .res-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .clips { display: grid; gap: 12px; margin-top: 18px; }
+  .clip { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 12px;
+          border: 1px solid var(--border); border-radius: 12px; }
+  .clip video { width: 110px; aspect-ratio: 9/16; object-fit: cover; border-radius: 8px; background: #000; display: block; }
+  .clip-body { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .clip-title { font-weight: 600; font-size: 15px; text-transform: capitalize; }
+  .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+  .caption { font-size: 13px; background: var(--surface-2); border-radius: 8px; padding: 8px 10px;
+             white-space: pre-wrap; word-break: break-word; }
+  .clip-actions { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+  .done-bar { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border);
+              display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  footer { margin-top: 20px; text-align: center; color: var(--muted); font-size: 12.5px; }
+
+  @media (max-width: 560px) {
+    main { padding-top: 28px; }
+    .card { padding: 18px; }
+    .options { grid-template-columns: 1fr; }
+    .clip { grid-template-columns: 84px 1fr; gap: 12px; }
+    .clip video { width: 84px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo"><svg viewBox="0 0 14 14"><path d="M3 1.5l9 5.5-9 5.5z" fill="white"/></svg></div>
+    <div>
+      <h1>Reels Studio</h1>
+      <p>Turn any video into vertical clips, ready to post.</p>
+    </div>
+  </header>
+
+  <!-- Step 1: input -->
+  <section class="card" id="setup">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="link">Paste link</button>
+      <button role="tab" aria-selected="false" data-tab="upload">Upload video</button>
+    </div>
+
+    <div class="panel" id="panel-link">
+      <input type="url" id="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+      <p class="sub" style="margin-top:8px">YouTube, Twitch VODs, and most other video sites work.</p>
+    </div>
+
+    <div class="panel hidden" id="panel-upload">
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="video/*" hidden>
+        <strong>Drop a video here, or click to browse</strong>
+        <span>MP4, MOV, MKV, WebM</span>
+      </label>
+      <div class="file-pill hidden" id="file-pill">
+        <span class="name" id="file-name"></span>
+        <span class="size" id="file-size"></span>
+        <button class="link-btn" id="file-clear" type="button">Remove</button>
+      </div>
+    </div>
+
+    <div class="label">What should the clips look like?</div>
+    <div class="options">
+      <label class="opt">
+        <input type="checkbox" id="opt-tracked" checked>
+        <span class="check"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="t">Face tracking</span>
+        <span class="d">Crops in and follows the speaker</span>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-padded">
+        <span class="check"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="t">Padded</span>
+        <span class="d">Full frame on a blurred background</span>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="opt-captions" checked>
+        <span class="check"><svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="t">Captions</span>
+        <span class="d">Word-by-word subtitles burned in</span>
+      </label>
+    </div>
+    <label class="all"><input type="checkbox" id="opt-all"> All of the above</label>
+    <label class="ai" id="ai-row">
+      <input type="checkbox" id="opt-ai">
+      <span>
+        <span class="t">Use AI to pick the best moments</span>
+        <span class="d" id="ai-desc">Claude reads the transcript, picks the strongest hooks and writes captions with hashtags. Off: a quick built-in picker, no API cost.</span>
+      </span>
+    </label>
+    <p class="hint" id="hint"></p>
+
+    <button class="btn btn-primary start" id="start" disabled>Start</button>
+  </section>
+
+  <!-- Step 2: progress -->
+  <section class="card hidden" id="progress">
+    <h2 id="prog-title">Making your reels</h2>
+    <p class="sub">This page can stay open or be refreshed. The work continues on the server.</p>
+    <div class="steps" id="steps">
+      <span class="step" data-step="download">Get video</span>
+      <span class="step" data-step="transcribe">Transcribe</span>
+      <span class="step" data-step="pick">Pick moments</span>
+      <span class="step" data-step="render">Render clips</span>
+    </div>
+    <div class="bar-row">
+      <div class="bar"><div id="bar"></div></div>
+      <span class="pct" id="pct">0%</span>
+    </div>
+    <p class="msg" id="msg">Starting…</p>
+    <ul class="log" id="log"></ul>
+    <div class="error-box hidden" id="error"></div>
+    <div class="row end">
+      <button class="btn btn-ghost btn-sm" id="cancel">Cancel</button>
+      <button class="btn btn-primary btn-sm hidden" id="retry">Start over</button>
+    </div>
+  </section>
+
+  <!-- Step 3: results -->
+  <section class="card hidden" id="results">
+    <div class="res-head">
+      <div>
+        <h2 id="res-title">Your clips are ready</h2>
+        <p class="sub">Preview, copy a caption, and download.</p>
+      </div>
+      <a class="btn btn-primary" id="zip" href="#">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10"/></svg>
+        Download all
+      </a>
+    </div>
+    <div class="clips" id="clips"></div>
+    <div class="done-bar">
+      <p class="sub">Finished? This deletes the clips from the server to free up space.</p>
+      <button class="btn btn-danger" id="done">I am done</button>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+let tab = "link", file = null, jobId = null, pollTimer = null, uploading = false;
+
+// ---------- tabs
+document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll(".tabs button").forEach((x) => x.setAttribute("aria-selected", x === b));
+  $("panel-link").classList.toggle("hidden", tab !== "link");
+  $("panel-upload").classList.toggle("hidden", tab !== "upload");
+  validate();
+}));
+
+// ---------- file picking
+const fmtSize = (n) => n > 1e9 ? (n / 1e9).toFixed(1) + " GB" : (n / 1e6).toFixed(1) + " MB";
+function setFile(f) {
+  file = f;
+  $("drop").classList.toggle("hidden", !!f);
+  $("file-pill").classList.toggle("hidden", !f);
+  if (f) { $("file-name").textContent = f.name; $("file-size").textContent = fmtSize(f.size); }
+  else $("file").value = "";
+  validate();
+}
+$("file").addEventListener("change", (e) => setFile(e.target.files[0] || null));
+$("file-clear").addEventListener("click", () => setFile(null));
+const drop = $("drop");
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) setFile(f); });
+
+// ---------- options
+const opts = ["opt-tracked", "opt-padded", "opt-captions"].map($);
+opts.forEach((o) => o.addEventListener("change", () => { syncAll(); validate(); }));
+$("opt-all").addEventListener("change", (e) => { opts.forEach((o) => (o.checked = e.target.checked)); validate(); });
+function syncAll() { $("opt-all").checked = opts.every((o) => o.checked); }
+$("url").addEventListener("input", validate);
+
+function validate() {
+  const hasInput = tab === "link" ? /^https?:\/\/\S+$/.test($("url").value.trim()) : !!file;
+  const hasLayout = $("opt-tracked").checked || $("opt-padded").checked;
+  $("hint").textContent = hasLayout ? "" : "Choose face tracking, padded, or both.";
+  $("start").disabled = !(hasInput && hasLayout) || uploading;
+  return hasInput && hasLayout;
+}
+
+// ---------- start
+$("start").addEventListener("click", () => {
+  if (!validate()) return;
+  const fd = new FormData();
+  if (tab === "link") fd.append("url", $("url").value.trim());
+  else fd.append("file", file);
+  fd.append("tracked", $("opt-tracked").checked);
+  fd.append("padded", $("opt-padded").checked);
+  fd.append("captions", $("opt-captions").checked);
+  fd.append("use_llm", $("opt-ai").checked);
+
+  showProgress();
+  setBar(0);
+  $("msg").textContent = tab === "upload" ? "Uploading video…" : "Sending link…";
+  uploading = true;
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "/api/jobs");
+  xhr.upload.onprogress = (e) => {
+    if (tab === "upload" && e.lengthComputable) {
+      const p = Math.round((e.loaded / e.total) * 100);
+      $("msg").textContent = p < 100 ? `Uploading video… ${p}%` : "Checking the file…";
+    }
+  };
+  xhr.onload = () => {
+    uploading = false;
+    let data = {};
+    try { data = JSON.parse(xhr.responseText); } catch {}
+    if (xhr.status >= 200 && xhr.status < 300) { jobId = data.id; store.set("reelsJob", jobId); render(data); poll(); }
+    else showError(data.detail || `Request failed (${xhr.status})`);
+  };
+  xhr.onerror = () => { uploading = false; showError("Couldn't reach the server. Is the container running?"); };
+  xhr.send(fd);
+});
+
+// ---------- progress
+function showProgress() {
+  $("setup").classList.add("hidden");
+  $("results").classList.add("hidden");
+  $("progress").classList.remove("hidden");
+  $("error").classList.add("hidden");
+  $("retry").classList.add("hidden");
+  $("cancel").classList.remove("hidden");
+  $("prog-title").textContent = "Making your reels";
+  $("log").innerHTML = "";
+  document.querySelectorAll(".step").forEach((s) => (s.className = "step"));
+}
+function setBar(p) { $("bar").style.width = p + "%"; $("pct").textContent = Math.floor(p) + "%"; }
+const order = ["download", "transcribe", "pick", "render"];
+function showError(text) {
+  $("progress").classList.remove("hidden");
+  $("setup").classList.add("hidden");
+  $("prog-title").textContent = "That didn't work";
+  $("error").textContent = text;
+  $("error").classList.remove("hidden");
+  $("cancel").classList.add("hidden");
+  $("retry").classList.remove("hidden");
+}
+
+function poll() {
+  clearTimeout(pollTimer);
+  if (!jobId) return;
+  fetch(`/api/jobs/${jobId}`).then((r) => {
+    if (r.status === 404) { reset(); return null; }
+    return r.json();
+  }).then((d) => {
+    if (!d) return;
+    render(d);
+    if (d.status === "queued" || d.status === "running") pollTimer = setTimeout(poll, 1000);
+  }).catch(() => { pollTimer = setTimeout(poll, 3000); });
+}
+
+function render(d) {
+  if (d.status === "done") return showResults(d);
+  if (d.status === "cancelled") return reset();
+  showProgressIfNeeded();
+  setBar(d.percent);
+  $("msg").textContent = d.status === "queued" ? "Waiting for another job to finish…" : d.message;
+  const cur = order.indexOf(d.stage);
+  document.querySelectorAll(".step").forEach((s) => {
+    const i = order.indexOf(s.dataset.step);
+    s.className = "step" + (i < cur || d.status === "done" ? " done" : i === cur && d.status === "running" ? " active" : "");
+  });
+  $("log").innerHTML = d.updates.slice(0, -1).reverse().slice(0, 5).map((u) =>
+    `<li><time>${new Date(u.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time><span>${esc(u.msg)}</span></li>`).join("");
+  if (d.status === "error") showError(d.error || "Something went wrong.");
+}
+function showProgressIfNeeded() {
+  if ($("progress").classList.contains("hidden")) showProgress();
+}
+
+// ---------- results
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const layoutName = { tracked: "Face tracking", padded: "Padded" };
+function showResults(d) {
+  $("setup").classList.add("hidden");
+  $("progress").classList.add("hidden");
+  $("results").classList.remove("hidden");
+  const n = d.clips.length;
+  $("res-title").textContent = `${n} clip${n === 1 ? "" : "s"} ready`;
+  $("zip").href = `/api/jobs/${d.id}/zip`;
+  $("clips").innerHTML = d.clips.map((c, i) => `
+    <article class="clip">
+      <video src="/api/jobs/${d.id}/files/${encodeURIComponent(c.file)}" preload="metadata" controls playsinline></video>
+      <div class="clip-body">
+        <div class="clip-title">${esc(c.title)}</div>
+        <div class="meta">
+          <span class="tag">${c.duration}s</span>
+          <span class="tag">${layoutName[c.layout] || c.layout}</span>
+          ${d.captions ? '<span class="tag">Captions</span>' : ""}
+          <span class="tag">${fmtSize(c.size)}</span>
+        </div>
+        ${c.caption ? `<div class="caption">${esc(c.caption)}</div>` : ""}
+        <div class="clip-actions">
+          <a class="btn btn-ghost btn-sm" href="/api/jobs/${d.id}/files/${encodeURIComponent(c.file)}?download=true">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 13h10"/></svg>
+            Download</a>
+          ${c.caption ? `<button class="btn btn-ghost btn-sm" data-copy="${i}">Copy caption</button>` : ""}
+        </div>
+      </div>
+    </article>`).join("");
+  $("clips").querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", () => {
+    navigator.clipboard.writeText(d.clips[+b.dataset.copy].caption).then(() => {
+      b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy caption"), 1500);
+    });
+  }));
+}
+
+// ---------- cancel / done / reset
+function deleteJob() {
+  const id = jobId;
+  if (!id) return Promise.resolve();
+  return fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {});
+}
+$("cancel").addEventListener("click", () => {
+  if (!confirm("Stop this job and discard its progress?")) return;
+  deleteJob().then(reset);
+});
+$("done").addEventListener("click", () => {
+  if (!confirm("Delete these clips from the server? Make sure you've downloaded what you need.")) return;
+  $("done").disabled = true;
+  deleteJob().then(() => { $("done").disabled = false; reset(); });
+});
+$("retry").addEventListener("click", () => deleteJob().then(reset));
+function reset() {
+  clearTimeout(pollTimer);
+  jobId = null; store.del("reelsJob");
+  $("progress").classList.add("hidden");
+  $("results").classList.add("hidden");
+  $("setup").classList.remove("hidden");
+  $("clips").innerHTML = "";
+  validate();
+}
+
+// ---------- boot
+fetch("/api/health").then((r) => r.json()).then((h) => {
+  const ai = $("opt-ai");
+  if (h.llm) {
+    const saved = store.get("reelsUseAI");
+    ai.checked = saved === null ? true : saved === "1";
+    $("ai-desc").textContent = `${h.model} reads the transcript, picks the strongest hooks and writes captions with hashtags. Off: a quick built-in picker, no API cost.`;
+  } else {
+    ai.checked = false; ai.disabled = true;
+    $("ai-row").classList.add("off");
+    $("ai-desc").textContent = "Unavailable: add ANTHROPIC_API_KEY to the .env file and restart to enable it.";
+  }
+  const g = h.gpu || {};
+  $("footer").innerHTML = `<span class="status"><span class="dot ${g.cuda ? "on" : ""}"></span>${
+    g.cuda ? `GPU: ${esc(g.name)} · transcription on GPU · ${g.encoder === "nvenc" ? "GPU video encoding" : "CPU video encoding"}`
+           : "No GPU detected, running on CPU (slower)"}</span>`;
+}).catch(() => {});
+$("opt-ai").addEventListener("change", (e) => store.set("reelsUseAI", e.target.checked ? "1" : "0"));
+jobId = store.get("reelsJob");
+if (jobId) poll();
+validate();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+# For machines without an NVIDIA GPU: docker compose -f docker-compose.yml -f docker-compose.cpu.yml up -d
+services:
+  reels:
+    deploy: !reset {}

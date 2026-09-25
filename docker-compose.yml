@@ -1,0 +1,26 @@
+services:
+  reels:
+    build: .
+    image: reels-studio
+    container_name: reels-studio
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-opus-5}
+      - WHISPER_MODEL=${WHISPER_MODEL:-auto}
+      - JOB_TTL_HOURS=${JOB_TTL_HOURS:-24}
+    volumes:
+      - whisper-models:/models   # cache Whisper models between restarts
+    restart: unless-stopped
+    # NVIDIA GPU: Whisper transcription (compute) + NVENC encoding (video)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, compute, video, utility]
+
+volumes:
+  whisper-models:
