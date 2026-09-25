@@ -6,7 +6,19 @@ Paste a YouTube or Twitch link, or upload a file. Choose how the clips should lo
 
 Everything runs locally in one Docker container. It uses your NVIDIA GPU when one is available.
 
+<p align="center">
+  <img src="docs/screenshots/3-results.png" alt="Reels Studio results page with two rendered clips, captions and download buttons" width="640">
+</p>
+
 ---
+
+## Screenshots
+
+| Choose a video and options | Live progress | Results (dark mode) |
+|---|---|---|
+| <img src="docs/screenshots/1-setup.png" alt="Setup: upload a video, pick face tracking, padded, captions and AI picking" width="280"> | <img src="docs/screenshots/2-progress.png" alt="Progress: step tracker, progress bar and recent updates" width="280"> | <img src="docs/screenshots/4-results-dark.png" alt="Results page in dark mode" width="280"> |
+
+The demo video in these screenshots is an animated gradient with a synthetic voice-over. It has no faces, so the face-tracking version falls back to a center crop.
 
 ## Features
 
@@ -150,3 +162,7 @@ The page is a thin client over a small JSON API:
 ## Responsible use
 
 Only clip and repost videos you own or have permission to use. Platforms may mute or remove reposted content.
+
+## License
+
+[MIT](LICENSE)
